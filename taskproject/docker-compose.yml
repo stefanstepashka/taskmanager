@@ -1,0 +1,32 @@
+version: '3.11'
+
+services:
+  redis:
+    image: 'redis:latest'
+    ports:
+      - '6379:6379'
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/taskproject
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A taskproject worker --loglevel=info
+    volumes:
+      - .:/taskproject
+    depends_on:
+      - redis
+
+
+
