@@ -18,15 +18,7 @@ task manager
 
 Для запуска проекта используется docker-compose, который настраивает и запускает все необходимые сервисы.
 
-Клонирование репозитория:
 
-bash
-
-```
-git clone https://github.com/yourusername/yourproject.git
-cd yourproject
-
-```
 Установка виртуального окружения и зависимостей:
 
 
