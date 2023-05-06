@@ -4,15 +4,15 @@ from django.shortcuts import render
 from django.db.models import Q
 # Create your views here.
 from django.shortcuts import render, redirect
-from .models import Task, Tag
+from .models import Task, Tag, Subscription
 from .forms import TaskForm
 from .tasks import generate_task_report_task
 
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout, authenticate
 from django.shortcuts import render, redirect
 from django.core.paginator import Paginator
-
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.decorators import login_required
 
 def task_list(request):
     tasks = Task.objects.all()
@@ -29,7 +29,7 @@ def task_list(request):
     tasks = tasks.order_by('-priority', 'created_at')
     all_tags = Tag.objects.all()
 
-    paginator = Paginator(tasks, 10) 
+    paginator = Paginator(tasks, 10)
     page = request.GET.get('page')
     tasks = paginator.get_page(page)
 
@@ -43,11 +43,14 @@ def task_list(request):
     })
 
 
+@login_required
 def task_create(request):
     if request.method == 'POST':
         form = TaskForm(request.POST)
         if form.is_valid():
-            form.save()
+            task = form.save()
+            subscription = Subscription.objects.create(user=request.user, task=task)
+            print(f"Created subscription: {subscription}")
             return redirect('task_list')
     else:
         form = TaskForm()
@@ -68,12 +71,25 @@ def task_update(request, task_id):
     return render(request, 'tasks/task_form.html', {'form': form})
 
 
-generate_task_report_task.delay()
+
 
 def task_delete(request, task_id):
     task = Task.objects.get(pk=task_id)
     task.delete()
     return redirect('task_list')
 
+
+
+
+def register_view(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('task_list')  # Замените на URL вашей страницы после регистрации
+    else:
+        form = UserCreationForm()
+    return render(request, 'registration/register.html', {'form': form})
 
 
